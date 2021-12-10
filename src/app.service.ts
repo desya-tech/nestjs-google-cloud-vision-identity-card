@@ -5,9 +5,26 @@ const vision = require('@google-cloud/vision');
 export class AppService {
   
   getHello() {
-    let data;
-    let array=[];
-    // Imports the Google Cloud client library
+    let arrayKtp = {}
+    let array=[]
+    let dataktpList=[]
+    let ktpLabel=[
+      "Provinsi",
+      "Kabupaten",
+      "NIK",
+      "Nama",
+      "Tempat/Tgl Lahir",
+      "Jenis Kelamin",
+      "Alamat",
+      "RT/RW",
+      "Kel/Desa",
+      "Kecamatan"
+    ]
+  //for local image
+  let imagepath= 'C:/Users/desya/Desktop/Sembarang/ktp.jpeg'
+  //example for local nestjs image
+  // let imagepath= './src/images/ktp2.jpeg'
+  // Imports the Google Cloud client library
 
   // Creates a client
   const client = new vision.ImageAnnotatorClient({
@@ -15,44 +32,18 @@ export class AppService {
   });
 
   // Performs label detection on the image file
-  client.labelDetection('C:/Users/desya/Desktop/Sembarang/ktp2.jpeg').then((results)=>{
+  client.labelDetection(imagepath).then((results)=>{
     const labels = results[0].labelAnnotations;
-    // console.log('Labels:');
-    // console.log(labels)
-    // console.log(labels.filter(label => label.score > 0.8 && label.description=='Identity document'))
+    console.log(labels.filter(label => label.score > 0.8 && label.description=='Identity document'))
   });
 
-  client.textDetection('C:/Users/desya/Desktop/Sembarang/ktp2.jpeg').then((results)=>{
-    const labels = results[0].textAnnotations;
-    // console.log(labels[0].description.replace("\n","a"));
-    console.log(labels[0].description
-    //   .replace("Tempat/Tgl Lahir : ","")
-    //   .replace("NIK","")
-    //   .replace(": ","")
-    // .replace("Nama","")
-    // .replace("Jenis kelamin","")
-    // .replace("Alamat","")
-    // .replace("PROVINSI ","")
-    // .replace("KABUPATEN ","")
-    // .replace("RT/RW","")
-    // .replace("Kel/Desa","")
-    // .replace("Kecamatan ","")
-    // .replace("Agama","")
-    // .replace("Status Perkawinan BELUM KAWIN","BELUM KAWIN")
-    // .replace("Pekerjaan","")
-    // .replace("Kewarganeg araan WNI","WNI")
-    // .replace("Kewarganegaraan ","")
-    // .replace("Berlaku Hingga","")
-    // .replace("Gol. Darah :","")
-    // .replace(":KRISTEN","KRISTEN")
-    // .replace("Gol Darah","")
-    // .replace("Jenis Kelamin","")
-    // .replace("Status Perkawinan: ","")
-    // .replace(":","")
-    );
-  });
-
- return client.textDetection('C:/Users/desya/Desktop/Sembarang/ktp2.jpeg').then(results=>{
+  // client.textDetection(imagepath).then((results)=>{
+  //   const labels = results[0].textAnnotations;
+  //   console.log(labels[0].description
+  //   );
+  // });
+  
+ return client.textDetection(imagepath).then(results=>{
     const labels = results[0].textAnnotations;
     labels[0].description
     .replace("Tempat/Tgl Lahir : ","")
@@ -64,20 +55,25 @@ export class AppService {
     .replace("Alamat","")
     .replace("PROVINSI ","")
     .replace("KABUPATEN ","")
+    .replace("Kecamatan ","")
+    .replace("Kecamatan :","")
+    .replace("Jenis Kelamin","")
+    .replace("LAKI LAKI","LAKI-LAKI")
     // .replace("RT/RW","")
     // .replace("Kel/Desa","")
-    .replace("Kecamatan :","")
-    .replace("Agama","")
-    .replace("Status Perkawinan BELUM KAWIN","BELUM KAWIN")
-    .replace("Pekerjaan","")
-    .replace("Kewarganegaraan ","")
-    .replace("Berlaku Hingga","")
-    .replace("Gol. Darah :","")
-    .replace("Gol Darah","")
-    .replace("Jenis Kelamin","")
-    .replace("Status Perkawinan: ","")
-    .replace("Ke varganegaraan: ","")
-    .replace("Kewarganegaraan: ","")
+    // .replace("Agama","")
+    // .replace("Status Perkawinan BELUM KAWIN","BELUM KAWIN")
+    // .replace("Pekerjaan","")
+    // .replace("Kewarganegaraan ","")
+    // .replace("Berlaku Hingga","")
+    // .replace("Gol. Darah :","")
+    // .replace("Gol Darah","")
+    // .replace("Status Perkawinan: ","")
+    // .replace("Ke varganegaraan: ","")
+    // .replace("Kewarganegaraan: ","") 
+    .replace(":","")
+    .replace(":","")
+    .replace(":","")
     .replace(":","")
     // .replace(", ","")
     .split('\n').forEach((element, index) => {
@@ -88,16 +84,32 @@ export class AppService {
         // || index == 18 || index == 20
         // || index == 21 || index == 24
         ){
-          if((index==8 || index == 7) && element == ''){
-            console.log(element[0])
-          }
         array.push(element);
       }
     });
-    // data = labels[0].description.split('\n')[0];
-    // array.push(data);
-    return array;
+    // cek jika tempat tangal lahir terpisah
+    array.forEach((element, index)=>{
+      if(index == 5){
+        if(element.length >=10){
+          console.log(element)
+          let temp = array[4].concat(", ").concat(array[5].replace(" ","-"))
+          // console.log("gabungan",temp)
+          array.splice(4, 0, temp);
+          array.splice(6,1)
+          array.splice(5,1)
+        } else{
+          array.splice(5,1)
+        }
+      }
+    })
+
+    for(let i = 0; i < ktpLabel.length; i++){
+      arrayKtp[ktpLabel[i]]=array[i]
+      // console.log(arrayKtp)
+    }
+
+    dataktpList.push(arrayKtp);
+    return dataktpList;
   });
-  
   }
 }
