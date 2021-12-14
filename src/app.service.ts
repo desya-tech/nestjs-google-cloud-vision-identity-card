@@ -1,5 +1,8 @@
 import { Injectable } from '@nestjs/common';
+var moment = require('moment');
 const vision = require('@google-cloud/vision');
+const language = require('@google-cloud/language');
+const {Translate} = require('@google-cloud/translate').v2;
 
 @Injectable()
 export class AppService {
@@ -18,10 +21,15 @@ export class AppService {
       "Alamat",
       "RT/RW",
       "Kel/Desa",
-      "Kecamatan"
+      "Kecamatan",
+      "Agama",
+      "Status Perkawinan",
+      "Kewarganegaraan"
     ]
+    let today = new Date();
+    let yyyy = today.getFullYear();
   //for local image
-  let imagepath= 'C:/Users/desya/Desktop/Sembarang/ktp2.jpeg'
+  let imagepath= 'C:/Users/desya/Desktop/Sembarang/ktp3.jpg'
   //example for local nestjs image
   // let imagepath= './src/images/ktp2.jpeg'
   // Imports the Google Cloud client library
@@ -31,46 +39,52 @@ export class AppService {
     keyFilename: 'C:/Users/desya/Downloads/virtus-platform-2be1302457ca.json'
   });
 
+  // Imports the Google Cloud client library
+  const translate = new Translate({
+    keyFilename: 'C:/Users/desya/Downloads/virtus-platform-2be1302457ca.json'
+  });
+
   // Performs label detection on the image file
   client.labelDetection(imagepath).then((results)=>{
     const labels = results[0].labelAnnotations;
     console.log(labels.filter(label => label.score > 0.8 && label.description=='Identity document'))
   });
 
-  client.textDetection(imagepath).then(results=>{
-    const labels = results[0].textAnnotations;
-    console.log(
-    labels[0].description
-    .replace("Tempat/Tgl Lahir : ","")
-    .replace("NIK\n","")
-    .replace(": ","")
-    .replace("Tempat/Tgl Lahir ","")
-    .replace("Nama\n","")
-    .replace("Jenis kelamin","")
-    .replace("Alamat\n","")
-    .replace("PROVINSI ","")
-    .replace("KABUPATEN ","")
-    .replace("Kecamatan ","")
-    .replace("Kecamatan :","")
-    .replace("Jenis kelamin\n","")
-    .replace("LAKI LAKI","LAKI-LAKI")
-    .replace("RT/RW\n","")
-    .replace("Kel/Desa\n","")
-    // .replace("Status Perkawinan BELUM KAWIN","BELUM KAWIN")
-    // .replace("Pekerjaan","")
-    // .replace("Kewarganegaraan ","")
-    // .replace("Berlaku Hingga","")
-    // .replace("Gol. Darah :","")
-    .replace("Gol Darah\n","")
-    .replace("KelDesa\n","")
-    .replace("RTRW\n","")
-    // .replace("Kewarganegaraan: ","") 
-    .replace(":","")
-    .replace(":","")
-    .replace(":","")
-    .replace(":","")
-    )
-  })
+  // client.textDetection(imagepath).then(results=>{
+  //   const labels = results[0].textAnnotations;
+  //   console.log(
+  //   labels[0].description
+  //   .replace("Tempat/Tgl Lahir : ","")
+  //   // .replace("NIK\n","")
+  //   .replace(": ","")
+  //   .replace("Tempat/Tgl Lahir ","")
+  //   // .replace("Nama\n","")
+  //   .replace("Jenis kelamin","")
+  //   // .replace("Alamat\n","")
+  //   .replace("PROVINSI ","")
+  //   .replace("KABUPATEN ","")
+  //   .replace("Kecamatan ","")
+  //   .replace("Kecamatan :","")
+  //   .replace("LAKI LAKI","LAKI-LAKI")
+  //   // .replace("RT/RW\n","")
+  //   // .replace("Kel/Desa\n","")
+  //   .replace("Jenis Kelamin","")
+  //   // .replace("Status Perkawinan BELUM KAWIN","BELUM KAWIN")
+  //   // .replace("Pekerjaan","")
+  //   // .replace("Kewarganegaraan ","")
+  //   // .replace("Berlaku Hingga","")
+  //   // .replace("Gol. Darah :","")
+  //   // .replace("Gol Darah\n","")
+  //   // .replace("KelDesa\n","")
+  //   // .replace("RTRW\n","")
+  //   // .replace("Kewarganegaraan: ","") 
+  //   .replace(":","")
+  //   .replace(":","")
+  //   .replace(":","")
+  //   .replace(":","")
+  //   // .replace(", ","")
+  //   )
+  // })
   
  return client.textDetection(imagepath).then(results=>{
     const labels = results[0].textAnnotations;
@@ -84,7 +98,7 @@ export class AppService {
     .replace("Jenis kelamin","")
     .replace("Alamat\n","")
     .replace("PROVINSI ","")
-    .replace("KABUPATEN ","")
+    // .replace("KABUPATEN ","")
     .replace("Kecamatan ","")
     .replace("Kecamatan :","")
     .replace("LAKI LAKI","LAKI-LAKI")
@@ -93,19 +107,95 @@ export class AppService {
     .replace("Jenis Kelamin","")
     // .replace("Status Perkawinan BELUM KAWIN","BELUM KAWIN")
     // .replace("Pekerjaan","")
-    // .replace("Kewarganegaraan ","")
+    .replace("Kewarganegaraan ","")
     // .replace("Berlaku Hingga","")
     // .replace("Gol. Darah :","")
     .replace("Gol Darah\n","")
     .replace("KelDesa\n","")
     .replace("RTRW\n","")
-    // .replace("Kewarganegaraan: ","") 
+    .replace("Kewarganegaraan: ","") 
     .replace(":","")
     .replace(":","")
     .replace(":","")
     .replace(":","")
     // .replace(", ","")
     .split('\n').forEach((element, index) => {
+      if(Number(element.replace(/[^0-9.]/g, '').substr(element.length - 4)))
+      {
+        let nikCleaning = element.replace(/[^\w\s]/gi,"").replace(" ","")
+        let nik = nikCleaning.substr(nikCleaning.length - 16)
+        if(Number(nik) && nik.length == 16)
+        arrayKtp[ktpLabel[2]]=nik
+      }
+
+      if(Number(element.substr(element.length - 4))){
+        // console.log(element, "filter 11111")
+        let tglCleaning= element.replace(" ","-").replace(" ","").replace(".","")
+        let tgl= tglCleaning.substr(tglCleaning.length - 10)
+        if(moment(tgl, "DD-MM-YYYY", true).isValid()){
+          console.log(tgl, "filter 22222")
+          if(yyyy-tgl.substr(tgl.length - 4) >=16){
+            arrayKtp[ktpLabel[4]]=tgl
+          }
+        }
+      }
+
+      if(Number(element.replace(/[^0-9.]/g, ''))){
+        if(element.replace(/[^0-9.]/g, '').length==6){
+          let rtrwCleaning = element.replace(" ","").replace(" ","").replace(":","")
+          arrayKtp[ktpLabel[7]] = rtrwCleaning
+        }
+      }
+
+      if(element.includes("LAKI")){
+        arrayKtp[ktpLabel[5]]= "LAKI-LAKI"
+      }
+      if(element.includes("PEREMPUAN")){
+        arrayKtp[ktpLabel[5]]= "PEREMPUAN"
+      }
+      
+      if(element.includes("ISLAM")){
+        arrayKtp[ktpLabel[10]]="ISLAM"
+      }
+      if(element.includes("KRISTEN")){
+        arrayKtp[ktpLabel[10]]="KRISTEN"
+      }
+      if(element.includes("KATOLIK")){
+        arrayKtp[ktpLabel[10]]="KATOLIK"
+      }
+      if(element.includes("HINDU")){
+        arrayKtp[ktpLabel[10]]="HINDU"
+      }
+      if(element.includes("BUDHA")){
+        arrayKtp[ktpLabel[10]]="BUDHA"
+      }
+      if(element.includes("KONGHUCU")){
+        arrayKtp[ktpLabel[10]]="KONGHUCU"
+      }
+
+      if(element.includes("KAWIN")){
+        if(element.includes("BELUM KAWIN")){
+          arrayKtp[ktpLabel[11]]="BELUM KAWIN"
+        }else{
+          arrayKtp[ktpLabel[11]]="KAWIN"
+        }
+      }
+
+      if(element.includes("CERAI")){
+        if(element.includes("HIDUP")){
+          arrayKtp[ktpLabel[11]]="CERAI HIDUP"
+        }else{
+          arrayKtp[ktpLabel[11]]="CERAI MATI"
+        }
+      }
+
+      if(element.includes("WNI")){
+        arrayKtp[ktpLabel[12]]="WNI"
+      }
+      if(element.includes("WNA")){
+        arrayKtp[ktpLabel[12]]="WNA"
+      }
+      
       if(
         index == 0 || index == 1 || index == 2 || index == 3 
         || index == 4 || index == 5 || index == 6 
@@ -119,6 +209,7 @@ export class AppService {
     });
     // cek jika tempat tangal lahir terpisah
     array.forEach((element, index)=>{
+      // console.log(this.cekEntity(element),"dataaaaaaaaa")
       if(index == 5){
         if(element.length >=10){
           let temp = array[4].concat(", ").concat(array[5].replace(" ","-"))
@@ -131,7 +222,7 @@ export class AppService {
       }
     })
 
-    for(let i = 0; i < ktpLabel.length; i++){
+    for(let i = 0; i <= 1; i++){
       arrayKtp[ktpLabel[i]]=array[i]
       // console.log(arrayKtp)
     }
@@ -140,9 +231,51 @@ export class AppService {
     return dataktpList;
   });
   }
+
+  cekEntity(){
+    let clientNLP = new language.LanguageServiceClient({
+      keyFilename: 'C:/Users/desya/Downloads/virtus-platform-2be1302457ca.json'
+    });
+
+    let text = this.getHello2("Love");
+    console.log(text,"textttttttttttt")
+    let document = {
+      content: text,
+      type: 'PLAIN_TEXT',
+    };
+    return clientNLP.analyzeEntities({document: document}).then(result22=>{
+      const Type = result22[0].entities[0].type;
+      if(Type == "PERSON"){
+        // console.log(result22[0].entities[0].name,"masukkkkkkkkk")
+        let data =result22[0].entities[0].name;
+        return data
+      }else{
+        let data =result22[0];
+        return data
+      }
+    })
+  }
+
+  getHello2(text) {
+    // let dataTranslate=[]
+    // Imports the Google Cloud client library
+    const translate = new Translate({
+      keyFilename: 'C:/Users/desya/Downloads/virtus-platform-2be1302457ca.json'
+    });
+    // const text = 'Hello, world!';
+    // The target language
+    const target = 'id';
+
+    // Translates some text into Indonesia
+    return translate.translate(text, "id").then(results3=>{
+      let bahasa = results3[0]
+      console.log(bahasa)
+      // dataTranslate.push(bahasa)
+      return bahasa
+    })
+    // return dataTranslate;
+  }
 }
-
-
 
 
 // return client.textDetection(imagepath).then(results=>{
