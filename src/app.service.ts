@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { isEmpty } from 'rxjs';
 var moment = require('moment');
 const vision = require('@google-cloud/vision');
 const language = require('@google-cloud/language');
@@ -29,7 +30,7 @@ export class AppService {
     let today = new Date();
     let yyyy = today.getFullYear();
   //for local image
-  let imagepath= 'C:/Users/desya/Desktop/Sembarang/ktp3.jpg'
+  let imagepath= 'C:/Users/desya/Desktop/Sembarang/imgx9.jpg'
   //example for local nestjs image
   // let imagepath= './src/images/ktp2.jpeg'
   // Imports the Google Cloud client library
@@ -44,48 +45,12 @@ export class AppService {
     keyFilename: 'C:/Users/desya/Downloads/virtus-platform-2be1302457ca.json'
   });
 
-  // Performs label detection on the image file
-  client.labelDetection(imagepath).then((results)=>{
-    const labels = results[0].labelAnnotations;
-    console.log(labels.filter(label => label.score > 0.8 && label.description=='Identity document'))
-  });
+  // // Performs label detection on the image file
+  // client.labelDetection(imagepath).then((results)=>{
+  //   const labels = results[0].labelAnnotations;
+  //   console.log(labels.filter(label => label.score > 0.8 && label.description=='Identity document'))
+  // });
 
-  // client.textDetection(imagepath).then(results=>{
-  //   const labels = results[0].textAnnotations;
-  //   console.log(
-  //   labels[0].description
-  //   .replace("Tempat/Tgl Lahir : ","")
-  //   // .replace("NIK\n","")
-  //   .replace(": ","")
-  //   .replace("Tempat/Tgl Lahir ","")
-  //   // .replace("Nama\n","")
-  //   .replace("Jenis kelamin","")
-  //   // .replace("Alamat\n","")
-  //   .replace("PROVINSI ","")
-  //   .replace("KABUPATEN ","")
-  //   .replace("Kecamatan ","")
-  //   .replace("Kecamatan :","")
-  //   .replace("LAKI LAKI","LAKI-LAKI")
-  //   // .replace("RT/RW\n","")
-  //   // .replace("Kel/Desa\n","")
-  //   .replace("Jenis Kelamin","")
-  //   // .replace("Status Perkawinan BELUM KAWIN","BELUM KAWIN")
-  //   // .replace("Pekerjaan","")
-  //   // .replace("Kewarganegaraan ","")
-  //   // .replace("Berlaku Hingga","")
-  //   // .replace("Gol. Darah :","")
-  //   // .replace("Gol Darah\n","")
-  //   // .replace("KelDesa\n","")
-  //   // .replace("RTRW\n","")
-  //   // .replace("Kewarganegaraan: ","") 
-  //   .replace(":","")
-  //   .replace(":","")
-  //   .replace(":","")
-  //   .replace(":","")
-  //   // .replace(", ","")
-  //   )
-  // })
-  
  return client.textDetection(imagepath).then(results=>{
     const labels = results[0].textAnnotations;
     // console.log(labels[0])
@@ -232,12 +197,36 @@ export class AppService {
   });
   }
 
-  cekEntity(){
+  googleVisionFaceDetect(){
+    let imagepath= 'C:/Users/desya/Desktop/Sembarang/imgx1.jpg'
+    //example for local nestjs image
+    // let imagepath= './src/images/ktp2.jpeg'
+    // Imports the Google Cloud client library
+
+    // Creates a client2
+    const client = new vision.ImageAnnotatorClient({
+      keyFilename: 'C:/Users/desya/Downloads/virtus-platform-2be1302457ca.json'
+    });
+
+    // Performs label detection on the image file
+    return client.faceDetection(imagepath).then((results)=>{
+      const faces = results[0].faceAnnotations
+      console.log(faces);
+      if(faces.length==0){
+        return "bukan foto selfie"
+      }else{
+        return faces;
+      }
+      
+    });
+  }
+
+  googleNLPCekEnitity(){
     let clientNLP = new language.LanguageServiceClient({
       keyFilename: 'C:/Users/desya/Downloads/virtus-platform-2be1302457ca.json'
     });
 
-    let text = this.getHello2("Love");
+    let text = this.googleTranslate("Love");
     console.log(text,"textttttttttttt")
     let document = {
       content: text,
@@ -256,7 +245,7 @@ export class AppService {
     })
   }
 
-  getHello2(text) {
+  googleTranslate(text) {
     // let dataTranslate=[]
     // Imports the Google Cloud client library
     const translate = new Translate({
