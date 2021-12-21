@@ -7,6 +7,6 @@ export class AppController {
 
   @Get()
   getHello() {
-    return this.appService.googleVisionFaceDetect();
+    return this.appService.googleDocumentAI();
   }
 }
